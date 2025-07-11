@@ -60,6 +60,38 @@ function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [knowledgeData, setKnowledgeData] = useState(knowledgeBase);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedPriority, setSelectedPriority] = useState('');
+
+  // Ambil semua kategori unik
+  const categories = Array.from(new Set(knowledgeBase.map(item => item.category)));
+  const priorities = ['high', 'medium', 'low'];
+
+  // Filter knowledge base
+  const filteredKnowledge = knowledgeBase.filter(item => {
+    const matchSearch =
+      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.keywords.some(keyword => keyword.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      item.category.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchCategory = selectedCategory ? item.category === selectedCategory : true;
+    const matchPriority = selectedPriority ? item.priority === selectedPriority : true;
+    return matchSearch && matchCategory && matchPriority;
+  });
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredKnowledge.length / itemsPerPage);
+  const paginatedKnowledge = filteredKnowledge.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // Reset page ke 1 jika filter/search berubah
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedCategory, selectedPriority]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -133,13 +165,6 @@ function App() {
     }
   };
 
-  const filteredKnowledge = knowledgeBase.filter(item =>
-    item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.keywords.some(keyword => keyword.toLowerCase().includes(searchQuery.toLowerCase())) ||
-    item.category.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   const handleLike = (id: string) => {
     setKnowledgeData(prev => prev.map(item => 
       item.id === id ? { ...item, likes: item.likes + 1 } : item
@@ -188,7 +213,7 @@ function App() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Header */}
       <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-4">
               <BRILogo className="h-12 w-auto" />
@@ -216,12 +241,12 @@ function App() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
           
           {/* Features Panel */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-sm p-6">
+            <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Fitur Utama KMS</h3>
               <div className="space-y-4">
                 <div className="flex items-start space-x-3">
@@ -263,7 +288,7 @@ function App() {
             </div>
 
             {/* Branch Location Simulator */}
-            <div className="bg-white rounded-xl shadow-sm p-6 mt-6">
+            <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 mt-4 sm:mt-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Lokasi Cabang</h3>
               <div className="space-y-3">
                 <div className="flex items-center space-x-2">
@@ -288,7 +313,7 @@ function App() {
             </div>
 
             {/* Statistics */}
-            <div className="bg-white rounded-xl shadow-sm p-6 mt-6">
+            <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 mt-4 sm:mt-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Statistik Database</h3>
               <div className="space-y-3">
                 <div className="flex justify-between">
@@ -327,7 +352,7 @@ function App() {
             </div>
 
             {/* Top Articles */}
-            <div className="bg-white rounded-xl shadow-sm p-6 mt-6">
+            <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 mt-4 sm:mt-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <TrendingUp className="h-5 w-5 mr-2 text-orange-500" />
                 Artikel Populer
@@ -371,8 +396,8 @@ function App() {
           <div className="lg:col-span-3">
             <div className="bg-white rounded-xl shadow-sm">
               {/* Tabs */}
-              <div className="border-b border-gray-200">
-                <nav className="-mb-px flex space-x-8 px-6">
+              <div className="border-b border-gray-200 overflow-x-auto">
+                <nav className="-mb-px flex space-x-4 sm:space-x-8 px-2 sm:px-6">
                   <button
                     onClick={() => setActiveTab('chat')}
                     className={`py-4 px-1 border-b-2 font-medium text-sm ${
@@ -400,7 +425,7 @@ function App() {
 
               {/* Chat Tab */}
               {activeTab === 'chat' && (
-                <div className="h-[600px] flex flex-col">
+                <div className="h-[60vh] sm:h-[600px] flex flex-col">
                   {/* Quick Questions */}
                   <div className="p-4 border-b border-gray-100">
                     <h4 className="text-sm font-medium text-gray-900 mb-3">Pertanyaan Referensi:</h4>
@@ -418,7 +443,7 @@ function App() {
                   </div>
 
                   {/* Messages */}
-                  <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                  <div className="flex-1 overflow-y-auto p-2 sm:p-6 space-y-4">
                     {messages.map((message) => (
                       <div
                         key={message.id}
@@ -453,7 +478,7 @@ function App() {
                   </div>
 
                   {/* Input */}
-                  <div className="p-6 border-t border-gray-200">
+                  <div className="p-2 sm:p-6 border-t border-gray-200">
                     <AutocompleteInput
                       value={inputMessage}
                       onChange={setInputMessage}
@@ -470,9 +495,9 @@ function App() {
 
               {/* Knowledge Base Tab */}
               {activeTab === 'knowledge' && (
-                <div className="p-6">
-                  <div className="mb-6">
-                    <div className="relative">
+                <div className="p-2 sm:p-6">
+                  <div className="mb-4 sm:mb-6 flex flex-col md:flex-row md:items-center md:space-x-4 space-y-2 md:space-y-0">
+                    <div className="relative flex-1">
                       <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                       <input
                         type="text"
@@ -482,83 +507,133 @@ function App() {
                         className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
                     </div>
-                    {searchQuery && (
-                      <p className="text-sm text-gray-600 mt-2">
-                        Ditemukan {filteredKnowledge.length} hasil untuk "{searchQuery}"
-                      </p>
-                    )}
+                    <select
+                      value={selectedCategory}
+                      onChange={e => setSelectedCategory(e.target.value)}
+                      className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Semua Kategori</option>
+                      {categories.map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </select>
+                    <select
+                      value={selectedPriority}
+                      onChange={e => setSelectedPriority(e.target.value)}
+                      className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Semua Prioritas</option>
+                      <option value="high">Tinggi</option>
+                      <option value="medium">Sedang</option>
+                      <option value="low">Rendah</option>
+                    </select>
                   </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {filteredKnowledge.map((item) => {
+                  {(searchQuery || selectedCategory || selectedPriority) && (
+                    <p className="text-sm text-gray-600 mb-2 sm:mb-4">
+                      Ditemukan {filteredKnowledge.length} hasil
+                      {searchQuery && <> untuk "{searchQuery}"</>}
+                      {selectedCategory && <> di kategori <b>{selectedCategory}</b></>}
+                      {selectedPriority && <> dengan prioritas <b>{selectedPriority === 'high' ? 'Tinggi' : selectedPriority === 'medium' ? 'Sedang' : 'Rendah'}</b></>}
+                    </p>
+                  )}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
+                    {paginatedKnowledge.map((item) => {
                       const currentItem = knowledgeData.find(k => k.id === item.id) || item;
                       return (
-                      <div key={item.id} className="border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow">
-                        <div className="flex items-start justify-between mb-2">
-                          <h3 className="font-medium text-gray-900 flex-1 mr-2 text-sm leading-relaxed">{item.title}</h3>
-                          <div className="flex items-center space-x-2">
-                            <span className={`px-2 py-1 rounded-full text-xs ${
-                              item.priority === 'high' ? 'bg-red-100 text-red-800' :
-                              item.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                              'bg-green-100 text-green-800'
-                            }`}>
-                              {item.priority === 'high' ? 'Tinggi' : 
-                               item.priority === 'medium' ? 'Sedang' : 'Rendah'}
-                            </span>
-                            <button
-                              onClick={() => handleKnowledgeClick(currentItem)}
-                              className="p-1 text-blue-600 hover:bg-blue-50 rounded"
-                              title="Lihat detail"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </button>
-                          </div>
-                        </div>
-                        <p className="text-sm text-gray-600 mb-3 leading-relaxed">{item.content.substring(0, 120)}...</p>
-                        
-                        {/* Engagement Stats */}
-                        <div className="flex items-center space-x-4 mb-3 text-xs text-gray-500">
-                          <span className="flex items-center">
-                            <Eye className="h-3 w-3 mr-1" />
-                            {currentItem.viewers.toLocaleString()} views
-                          </span>
-                          <span className="flex items-center">
-                            <ThumbsUp className="h-3 w-3 mr-1" />
-                            {currentItem.likes}
-                          </span>
-                          <span className="flex items-center">
-                            <ThumbsDown className="h-3 w-3 mr-1" />
-                            {currentItem.dislikes}
-                          </span>
-                          {currentItem.lastViewed && (
-                            <span className="text-purple-600">
-                              • {currentItem.lastViewed}
-                            </span>
-                          )}
-                        </div>
-                        
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                            {item.category}
-                          </span>
-                          <div className="flex flex-wrap gap-1">
-                            {item.keywords.slice(0, 3).map((keyword, index) => (
-                              <span key={index} className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
-                                {keyword}
+                        <div key={item.id} className="border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow">
+                          <div className="flex items-start justify-between mb-2">
+                            <h3 className="font-medium text-gray-900 flex-1 mr-2 text-sm leading-relaxed">{item.title}</h3>
+                            <div className="flex items-center space-x-2">
+                              <span className={`px-2 py-1 rounded-full text-xs ${
+                                item.priority === 'high' ? 'bg-red-100 text-red-800' :
+                                item.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-green-100 text-green-800'
+                              }`}>
+                                {item.priority === 'high' ? 'Tinggi' : 
+                                 item.priority === 'medium' ? 'Sedang' : 'Rendah'}
                               </span>
-                            ))}
-                            {item.keywords.length > 3 && (
-                              <span className="text-xs text-gray-500">+{item.keywords.length - 3}</span>
+                              <button
+                                onClick={() => handleKnowledgeClick(currentItem)}
+                                className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                                title="Lihat detail"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </div>
+                          <p className="text-sm text-gray-600 mb-3 leading-relaxed">{item.content.substring(0, 120)}...</p>
+                          
+                          {/* Engagement Stats */}
+                          <div className="flex items-center space-x-4 mb-3 text-xs text-gray-500">
+                            <span className="flex items-center">
+                              <Eye className="h-3 w-3 mr-1" />
+                              {currentItem.viewers.toLocaleString()} views
+                            </span>
+                            <span className="flex items-center">
+                              <ThumbsUp className="h-3 w-3 mr-1" />
+                              {currentItem.likes}
+                            </span>
+                            <span className="flex items-center">
+                              <ThumbsDown className="h-3 w-3 mr-1" />
+                              {currentItem.dislikes}
+                            </span>
+                            {currentItem.lastViewed && (
+                              <span className="text-purple-600">
+                                • {currentItem.lastViewed}
+                              </span>
                             )}
                           </div>
+                          
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                              {item.category}
+                            </span>
+                            <div className="flex flex-wrap gap-1">
+                              {item.keywords.slice(0, 3).map((keyword, index) => (
+                                <span key={index} className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                                  {keyword}
+                                </span>
+                              ))}
+                              {item.keywords.length > 3 && (
+                                <span className="text-xs text-gray-500">+{item.keywords.length - 3}</span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="mt-2 text-xs text-gray-500">
+                            Update: {item.lastUpdated} • {item.author}
+                          </div>
                         </div>
-                        <div className="mt-2 text-xs text-gray-500">
-                          Update: {item.lastUpdated} • {item.author}
-                        </div>
-                      </div>
                       );
                     })}
                   </div>
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="flex flex-wrap justify-center items-center space-x-1 sm:space-x-2 mt-4 sm:mt-8">
+                      <button
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        disabled={currentPage === 1}
+                        className="px-3 py-1 rounded border border-gray-300 bg-white hover:bg-gray-100 disabled:opacity-50"
+                      >
+                        Prev
+                      </button>
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                        <button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          className={`px-3 py-1 rounded border ${currentPage === page ? 'bg-blue-500 text-white border-blue-500' : 'bg-white border-gray-300 hover:bg-gray-100'}`}
+                        >
+                          {page}
+                        </button>
+                      ))}
+                      <button
+                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        disabled={currentPage === totalPages}
+                        className="px-3 py-1 rounded border border-gray-300 bg-white hover:bg-gray-100 disabled:opacity-50"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -566,9 +641,9 @@ function App() {
         </div>
 
         {/* Benefits Section */}
-        <div className="mt-8 bg-white rounded-xl shadow-sm p-6">
-          <h3 className="text-xl font-semibold text-gray-900 mb-6">Manfaat KMS untuk Cabang di Pelosok</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="mt-4 sm:mt-8 bg-white rounded-xl shadow-sm p-4 sm:p-6">
+          <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6">Manfaat KMS untuk Cabang di Pelosok</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
             <div className="text-center">
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Database className="h-8 w-8 text-blue-600" />
